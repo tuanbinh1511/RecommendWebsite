@@ -34,7 +34,6 @@ function Login() {
         setProfile(data.data.data.user)
         setIsAuthenticated(true)
         navigate(path.home)
-        console.log(data)
       },
       onError: (error) => {
         if (isAxios404Error(error)) {
