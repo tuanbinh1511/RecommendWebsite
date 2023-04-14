@@ -23,7 +23,7 @@ export function formatNumberToSocial(value) {
     .format(value)
     .replace('.', ',')
 }
-export const rateSale = (original, sale) => Math.round(((original - sale) / original) * 100) + '%'
+export const rateSale = (original, sale) => Number(Math.round(((original - sale) / original) * 100)) + '%'
 
 const removeSpecialCharacter = (str) =>
   // eslint-disable-next-line no-useless-escape

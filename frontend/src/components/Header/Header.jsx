@@ -17,7 +17,7 @@ function Header() {
       setProfile(null)
     }
   })
-  console.log(profile)
+
   const handleLogout = () => {
     logoutMutation.mutate()
   }

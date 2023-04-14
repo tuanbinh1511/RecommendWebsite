@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import Button from '../../../components/Button/Button'
 import Input from '../../../components/Input'
 
-export default function AsideFilter() {
+export default function AsideFilter({ categories }) {
   return (
     <div className='py-4'>
       <Link to='/' className='flex items-center font-bold'>
@@ -22,20 +22,19 @@ export default function AsideFilter() {
         Tất cả danh mục
       </Link>
       <div className='my-4 h-[1px] bg-gray-300' />
+
       <ul>
-        <li className='py-2 pl-2'>
-          <Link to='/' className='relative px-2 font-semibold text-orange'>
-            <svg viewBox='0 0 4 7' className='absolute top-1 left-[-10px] h-2 w-2 fill-orange'>
-              <polygon points='4 3.5 0 0 0 7' />
-            </svg>
-            Thời trang nam
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to='/' className='relative px-2 '>
-            Điện thoại
-          </Link>
-        </li>
+        {categories &&
+          categories.map((category) => (
+            <li className='py-2 pl-2' key={category.id}>
+              <Link to='/' className='relative px-2 font-semibold text-black'>
+                <svg viewBox='0 0 4 7' className='absolute top-[9px] left-[-10px] h-2 w-2 fill-black'>
+                  <polygon points='4 3.5 0 0 0 7' />
+                </svg>
+                {category.name}
+              </Link>
+            </li>
+          ))}
       </ul>
       <Link to='/' className='mt-4 flex items-center font-bold uppercase'>
         <svg

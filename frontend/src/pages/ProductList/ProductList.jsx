@@ -5,8 +5,8 @@ import productApi from '../../apis/products.api'
 import { useQuery } from '@tanstack/react-query'
 import useQueryParams from '../../hook/useQueryParams'
 import Pagination from '../../components/Pagination'
-import { useState } from 'react'
 import { omitBy, isUndefined } from 'lodash'
+import categoryApi from '../../apis/category.api'
 
 function ProductList() {
   const queryParams = useQueryParams()
@@ -26,14 +26,17 @@ function ProductList() {
       return productApi.getProducts(queryParams)
     }
   })
-
-  console.log(queryConfig)
-
+  const { data: categoryData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => {
+      return categoryApi.getCategories()
+    }
+  })
   return (
     <div className='bg-gray-200 py-6'>
       <div className='container'>
         <div className='grid grid-cols-12 gap-6'>
-          <div className='col-span-3'>{<AsideFilter />}</div>
+          <div className='col-span-3'>{<AsideFilter categories={categoryData?.data?.categories} />}</div>
           <div className='col-span-9'>
             <SoftProductList />
             <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4'>

@@ -33,7 +33,6 @@ function Register() {
         setIsAuthenticated(true)
         setProfile(data.data.data.user)
         navigate(path.home)
-        console.log(data)
       },
       onError: (error) => {
         if (isAxios422Error(error)) {
