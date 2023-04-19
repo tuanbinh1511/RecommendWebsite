@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import productApi from '../../apis/products.api'
-import { formatNumberToSocial, rateSale } from '../../utils/utils'
+import { formatCurrency, formatNumberToSocial, rateSale } from '../../utils/utils'
 import InputNumber from '../../components/InputNumber'
 import Product from '../ProductList/Product'
+import { useRef } from 'react'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -16,41 +17,41 @@ export default function ProductDetail() {
     queryKey: ['products'],
     queryFn: () => productApi.getProducts()
   })
-  console.log(product)
-  console.log(productData)
+  const imageRef = useRef(null)
 
-  // const handleZoom = (e) => {
-  //   const rect = e.currentTarget.getBoundingClientRect()
-  //   const image = product?.imgurl
-  //   const { naturalHeight, naturalWidth } = image
-  //   const { offsetX, offsetY } = e.nativeEvent
-  //   const top = offsetY * (1 - naturalHeight / rect.height)
-  //   const left = offsetX * (1 - naturalWidth / rect.width)
-  //   image.style.width = naturalWidth + 'px'
-  //   image.style.height = naturalHeight + 'px'
-  //   image.style.maxWidth = 'unset'
-  //   image.style.top = top + 'px'
-  //   image.style.left = left + 'px'
-  // }
-  // const handleRemoveZoom = (e) => {
-  //   product?.imgurl.removeAttribute('style')
-  // }
+  const handleZoom = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const image = imageRef.current
+    const { naturalHeight, naturalWidth } = image
+    const { offsetX, offsetY } = e.nativeEvent
+    const top = offsetY * (1 - naturalHeight / rect.height)
+    const left = offsetX * (1 - naturalWidth / rect.width)
+    image.style.width = naturalWidth + 'px'
+    image.style.height = naturalHeight + 'px'
+    image.style.maxWidth = 'unset'
+    image.style.top = top + 'px'
+    image.style.left = left + 'px'
+  }
+  const handleRemoveZoom = (e) => {
+    imageRef.current.removeAttribute('style')
+  }
   if (!product) return null
   return (
-    <div className='bg-gray-200 py-6'>
-      <div className='bg-white p-4 shadow'>
+    <div className='bg-slate-200 '>
+      <div className='bg-slate-50 p-6 shadow'>
         <div className='container'>
           <div className='grid grid-cols-12 gap-9'>
             <div className='col-span-5'>
               <div
-                className='relative w-full pt-[100%] shadow'
-                // onMouseMove={handleZoom}
-                // onMouseLeave={handleRemoveZoom}
+                className='relative w-full overflow-hidden pt-[100%] shadow'
+                onMouseMove={handleZoom}
+                onMouseLeave={handleRemoveZoom}
               >
                 <img
                   src={product?.imgurl}
                   alt={product?.name}
-                  className='absolute top-0 left-0 h-full w-full bg-white object-cover'
+                  ref={imageRef}
+                  className='pointer-events-none absolute top-0 left-0 h-[100%] w-[100%] object-cover'
                 />
               </div>
             </div>
@@ -67,15 +68,15 @@ export default function ProductDetail() {
                 </div> */}
                 <div className='mx-4 h-4 w-[1px] bg-gray-300'></div>
                 <div>
-                  <span>{formatNumberToSocial(3000)}</span>
+                  <span>{formatNumberToSocial(product?.sold)}</span>
                   <span className='ml-1 text-gray-500'>Đã bán</span>
                 </div>
               </div>
-              <div className='mt-8 flex items-center bg-gray-50 px-5 py-4'>
-                <div className='text-gray-500 line-through'>₫{product?.price}</div>
-                <div className='ml-3 text-3xl font-medium text-orange'>₫{product?.price}</div>
+              <div className='mt-8 flex items-center bg-slate-200 px-5 py-4'>
+                <div className='text-gray-500 line-through'>₫{formatCurrency(product?.old_price)}</div>
+                <div className='ml-3 text-3xl font-medium text-orange'>₫{formatCurrency(product?.old_price)}</div>
                 <div className='ml-4 rounded-sm bg-orange px-1 py-[2px] text-xs font-semibold uppercase text-white'>
-                  {rateSale(product?.price, product?.price)} giảm
+                  {rateSale(product?.old_price, product?.price)} giảm
                 </div>
               </div>
               <div className='mt-8 flex items-center'>
@@ -112,7 +113,7 @@ export default function ProductDetail() {
                     </svg>
                   </button>
                 </div>
-                <div className='ml-6 text-sm text-gray-500'>500 sản phẩm có sẵn</div>
+                <div className='ml-6 text-sm text-gray-500'>{product?.quantity} sản phẩm có sẵn</div>
               </div>
               <div className='mt-8 flex items-center'>
                 <button className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'>

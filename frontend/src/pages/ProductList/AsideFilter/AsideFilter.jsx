@@ -1,10 +1,54 @@
-import { Link } from 'react-router-dom'
+import { Link, createSearchParams, useNavigate } from 'react-router-dom'
 import Button from '../../../components/Button/Button'
-import Input from '../../../components/Input'
+import classNames from 'classnames'
+import path from '../../../constants/path'
+import InputNumber from '../../../components/InputNumber/InputNumber'
+import { Controller, useForm } from 'react-hook-form'
+import { schema } from '../../../utils/rules'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { omit } from 'lodash'
 
-export default function AsideFilter({ categories }) {
+const PriceSchema = schema.pick(['minprice', 'maxprice'])
+
+export default function AsideFilter({ categories, queryConfig }) {
+  const { cat } = queryConfig
+  const category = ['dientu', 'giadung', 'quanao']
+  const {
+    data,
+    control,
+    trigger,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      minprice: '',
+      maxprice: ''
+    },
+    resolver: yupResolver(PriceSchema)
+  })
+
+  const navigate = useNavigate()
+  const onSubmit = handleSubmit((data) => {
+    console.log(data)
+    navigate({
+      pathname: path.home,
+      search: createSearchParams({
+        ...queryConfig,
+        minprice: data.minprice,
+        maxprice: data.maxprice
+      }).toString()
+    })
+  })
+  const handleRemoveAll = () => {
+    console.log(data)
+    navigate({
+      pathname: path.home,
+      search: createSearchParams(omit(queryConfig, ['minprice', 'maxprice', 'cat', 'sortby', 'order'])).toString()
+    })
+  }
+
   return (
-    <div className='py-4'>
+    <div className='border-[1px] border-slate-400 py-4 px-3 shadow-xl'>
       <Link to='/' className='flex items-center font-bold'>
         <svg viewBox='0 0 12 10' className='mr-3 h-4 w-3 fill-current'>
           <g fillRule='evenodd' stroke='none' strokeWidth={1}>
@@ -22,19 +66,37 @@ export default function AsideFilter({ categories }) {
         Tất cả danh mục
       </Link>
       <div className='my-4 h-[1px] bg-gray-300' />
-
       <ul>
-        {categories &&
-          categories.map((category) => (
-            <li className='py-2 pl-2' key={category.id}>
-              <Link to='/' className='relative px-2 font-semibold text-black'>
-                <svg viewBox='0 0 4 7' className='absolute top-[9px] left-[-10px] h-2 w-2 fill-black'>
-                  <polygon points='4 3.5 0 0 0 7' />
-                </svg>
-                {category.name}
+        {categories?.map((categoryItem) => {
+          const Id = Number(categoryItem.id)
+          const isActive = cat === category[Id - 1]
+          return (
+            <li className=' py-2 pl-2 ' key={categoryItem.id}>
+              <Link
+                to={{
+                  pathname: path.home,
+                  search: createSearchParams({
+                    ...queryConfig,
+                    cat: category[Id - 1]
+                  }).toString()
+                }}
+                className={classNames('relative block px-2 font-medium ', {
+                  'animate-bounce font-semibold text-orange': isActive
+                })}
+              >
+                {isActive && (
+                  <svg
+                    viewBox='0 0 4 7'
+                    className={classNames(' absolute top-[8px] left-[-10px]  h-3 w-3 fill-orange ')}
+                  >
+                    <polygon points='4 3.5 0 0 0 7'></polygon>
+                  </svg>
+                )}
+                {categoryItem.name}
               </Link>
             </li>
-          ))}
+          )
+        })}
       </ul>
       <Link to='/' className='mt-4 flex items-center font-bold uppercase'>
         <svg
@@ -58,26 +120,58 @@ export default function AsideFilter({ categories }) {
       </Link>
       <div className='my-4 h-[1px] bg-gray-300' />
       <div className='my-5'>
-        <div>Khoản giá</div>
-        <form className='mt-2'>
+        <div className='font-medium'>Khoảng giá</div>
+        <form className='mt-2' onSubmit={onSubmit}>
           <div className='flex items-start'>
-            <Input
-              type='text'
-              className='grow'
-              name='from'
-              placeholder='₫ TỪ'
-              classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm focus:shadow-sm'
+            <Controller
+              control={control}
+              name='minprice'
+              render={({ field }) => {
+                return (
+                  <InputNumber
+                    type='text'
+                    className='grow'
+                    placeholder='₫ TỪ'
+                    classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm focus:shadow-sm'
+                    classNameError='hidden'
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      field.ref()
+                      trigger('maxprice')
+                    }}
+                  />
+                )
+              }}
             />
+
             <div className='mx-2 mt-2 shrink-0'>-</div>
-            <Input
-              type='text'
-              className='grow'
-              name='from'
-              placeholder='₫ ĐẾN'
-              classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm focus:shadow-sm'
+            <Controller
+              control={control}
+              name='maxprice'
+              render={({ field }) => {
+                return (
+                  <InputNumber
+                    type='text'
+                    className='grow'
+                    placeholder='₫ TỪ'
+                    classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm focus:shadow-sm'
+                    classNameError='hidden'
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      trigger('minprice')
+                    }}
+                  />
+                )
+              }}
             />
           </div>
-          <Button className='flex w-full items-center justify-center bg-orange p-2 text-sm uppercase text-white hover:bg-orange/80'>
+          <div className='mt-1 min-h-[1.25rem] text-center text-sm text-red-600'>{errors.minprice?.message}</div>
+          <Button
+            className='flex w-full items-center justify-center bg-orange p-2 text-sm font-semibold uppercase text-white hover:bg-orange/80'
+            type='submit'
+          >
             Áp dụng
           </Button>
         </form>
@@ -155,7 +249,11 @@ export default function AsideFilter({ categories }) {
         </li>
       </ul>
       <div className='my-4 h-[1px] bg-gray-300' />
-      <Button className='flex w-full items-center justify-center bg-orange p-2 text-sm uppercase text-white hover:bg-orange/80'>
+      <Button
+        isLoading={false}
+        className='flex w-full items-center justify-center bg-orange p-2 text-sm font-semibold uppercase text-white hover:bg-orange/80'
+        onClick={handleRemoveAll}
+      >
         Xóa tất cả
       </Button>
     </div>
