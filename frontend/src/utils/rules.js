@@ -40,6 +40,13 @@ import * as yup from 'yup'
 //     }
 //   }
 // }
+function testPriceMinMax() {
+  const { maxprice, minprice } = this.parent
+  if (minprice !== '' && maxprice !== '') {
+    return Number(maxprice) >= Number(minprice)
+  }
+  return minprice !== '' || maxprice !== ''
+}
 
 export const schema = yup.object({
   username: yup
@@ -58,7 +65,18 @@ export const schema = yup.object({
     .required('Nhập lại mật khẩu là bắt buộc!')
     .min(5, 'Độ dài mật khẩu từ 5-160 kí tự!')
     .max(160, 'Độ dài mật khẩu từ 5-160 kí tự!')
-    .oneOf([yup.ref('password')], 'Nhập lại mật khẩu không khớp!')
+    .oneOf([yup.ref('password')], 'Nhập lại mật khẩu không khớp!'),
+  minprice: yup.string().test({
+    name: 'price-not-allowed',
+    message: 'Giá không phù hợp',
+    test: testPriceMinMax
+  }),
+  maxprice: yup.string().test({
+    name: 'price-not-allowed',
+    message: 'Giá không phù hợp',
+    test: testPriceMinMax
+  }),
+  keyword: yup.string().trim().required()
 })
 
-export const LoginSchema = schema.omit(['confirm_password'])
+export const LoginSchema = schema.pick(['username', 'password'])

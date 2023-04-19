@@ -13,13 +13,14 @@ import { isAxios422Error } from '../../utils/utils'
 import { useContext } from 'react'
 import { AppContext } from '../../context/app.context'
 function Register() {
+  const registerSchema = schema.pick(['username', 'password', 'confirm_password'])
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors }
   } = useForm({
-    resolver: yupResolver(schema)
+    resolver: yupResolver(registerSchema)
   })
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
   const navigate = useNavigate()

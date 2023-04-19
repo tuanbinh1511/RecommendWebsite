@@ -1,5 +1,5 @@
 import Popover from '../Popover'
-import { Link } from 'react-router-dom'
+import { Link, createSearchParams, useNavigate } from 'react-router-dom'
 import Logo from '../../assets/imgs/Logo.png'
 import NoProduct from '../../assets/imgs/NoProduct.png'
 import path from '../../constants/path'
@@ -7,8 +7,15 @@ import { useContext } from 'react'
 import { AppContext } from '../../context/app.context'
 import { useMutation } from '@tanstack/react-query'
 import { logoutAccount } from '../../apis/auth.api'
+import { useQueryConfig } from '../../hook/useQueryConfig'
+import { omit } from 'lodash'
+import { useForm } from 'react-hook-form'
+import { schema } from '../../utils/rules'
+import { yupResolver } from '@hookform/resolvers/yup'
+
+const keywordSchema = schema.pick(['keyword'])
+
 function Header() {
-  //   const isActive = false
   const { isAuthenticated, setIsAuthenticated, profile, setProfile } = useContext(AppContext)
   const logoutMutation = useMutation({
     mutationFn: logoutAccount,
@@ -17,17 +24,36 @@ function Header() {
       setProfile(null)
     }
   })
-
+  const queryConfig = useQueryConfig()
+  const { register, handleSubmit } = useForm({
+    defaultValues: {
+      keyword: ''
+    },
+    resolver: yupResolver(keywordSchema)
+  })
+  console.log(queryConfig)
+  const navigate = useNavigate()
+  const onSubmitSearch = handleSubmit((data) => {
+    navigate({
+      pathname: path.home,
+      search: createSearchParams(
+        omit({
+          ...queryConfig,
+          keyword: data.keyword.toString()
+        })
+      ).toString()
+    })
+  })
   const handleLogout = () => {
     logoutMutation.mutate()
   }
   const purchasesIncart = 0
   return (
-    <div className='mx-4 my-2'>
+    <div className=' bg-orange'>
       <div className='mb-2'>
         <div className='flex justify-end'>
           <Popover
-            className='flex translate-y-[3px] cursor-pointer items-center pt-1 pb-2 text-sm text-black hover:text-gray-500 md:text-xs'
+            className='flex translate-y-[3px] cursor-pointer items-center pt-1 pb-2 text-sm text-black hover:text-white md:text-xs'
             renderPopover={
               <div className='relative rounded-sm border-gray-100 bg-white shadow-md '>
                 <div className='flex flex-col py-2 px-3 pr-16'>
@@ -118,18 +144,22 @@ function Header() {
           )}
         </div>
       </div>
-      <nav className='rounded border-gray-200 bg-white px-2 py-2.5 dark:bg-gray-900 sm:px-4'>
+      <nav className='rounded border-gray-200 bg-orange px-2 py-2.5 dark:bg-gray-900 sm:px-4'>
         <div className='container  grid grid-cols-12 '>
           <Link to={path.home} className='col-span-3 flex items-center'>
             <img src={Logo} className=' h-6 sm:h-9' alt=' Logo' />
           </Link>
 
-          <form className='col-span-8 flex-grow sm:flex-shrink  sm:flex-grow-0 md:col-span-6 md:flex-shrink-0'>
+          <form
+            className='col-span-8 flex-grow sm:flex-shrink  sm:flex-grow-0 md:col-span-6 md:flex-shrink-0'
+            onSubmit={onSubmitSearch}
+          >
             <div className='relative flex  rounded-sm bg-white p-1 text-sm'>
               <input
                 type='text'
                 placeholder='FREESHIP ĐƠN TỪ 0 ĐỒNG'
-                className='flex-grow border-2 border-r-0 border-orange bg-transparent py-2 pl-2 pr-4 text-black outline-none'
+                className='flex-grow  border-orange bg-transparent py-2 pl-2 pr-4 text-black outline-none'
+                {...register('keyword')}
               />
               <button className='flex-shrink-0 rounded-sm bg-orange py-2 px-4 hover:opacity-90'>
                 <svg
