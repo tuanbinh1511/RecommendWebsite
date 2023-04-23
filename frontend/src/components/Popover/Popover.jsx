@@ -53,7 +53,7 @@ function Popover({ children, className, renderPopover, as: Element = 'div', init
               initial={{ opacity: 0, transform: 'scale(0.05)' }}
               animate={{ opacity: 1, transform: 'scale(1)' }}
               exit={{ opacity: 0, transform: 'scale(0)' }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4 }}
               {...getFloatingProps()}
             >
               <span

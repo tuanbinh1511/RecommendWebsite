@@ -7,7 +7,6 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { LoginSchema } from '../../utils/rules'
 import { useMutation } from '@tanstack/react-query'
 import { loginAccount } from '../../apis/auth.api'
-import { omit } from 'lodash'
 import { isAxios404Error } from '../../utils/utils'
 import { useContext } from 'react'
 import { AppContext } from '../../context/app.context'
@@ -17,6 +16,7 @@ function Login() {
   const {
     register,
     handleSubmit,
+    getValues,
     setError,
     formState: { errors }
   } = useForm({
@@ -28,15 +28,20 @@ function Login() {
     mutationFn: (body) => loginAccount(body)
   })
   const onSubmit = handleSubmit((data) => {
-    const body = omit(data)
-    loginAccountMutation.mutate(body, {
+    const formData = new FormData()
+    formData.append('username', getValues('username'))
+    formData.append('password', getValues('password'))
+
+    // const body = omit(formData)
+    loginAccountMutation.mutate(formData, {
       onSuccess: (data) => {
-        setProfile(data.data.data.user)
         setIsAuthenticated(true)
+        setProfile(data.data.user)
         navigate(path.home)
       },
       onError: (error) => {
         if (isAxios404Error(error)) {
+          console.log(error)
           const formErrorDetail = error?.response?.data?.detail
           if (formErrorDetail) {
             if (formErrorDetail === 'Invalid Credentials') {

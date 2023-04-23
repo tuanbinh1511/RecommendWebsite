@@ -1,24 +1,50 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import productApi from '../../apis/products.api'
 import { formatCurrency, formatNumberToSocial, rateSale } from '../../utils/utils'
-import InputNumber from '../../components/InputNumber'
 import Product from '../ProductList/Product'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import QuantityController from '../../components/QuantityController/QuantityController'
+import cartApi from '../../apis/cart.api'
+import recommendApi from '../../apis/recommend.api'
 
 export default function ProductDetail() {
+  const queryClient = useQueryClient()
+
   const { id } = useParams()
+  console.log(id)
+  const [buyCount, setBuyCount] = useState(1)
   const { data: productDetailData } = useQuery({
     queryKey: ['product', id],
     queryFn: () => productApi.getProductDetail(id)
   })
   const product = productDetailData?.data
-  const { data: productData } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => productApi.getProducts()
+  const { data: recommendData } = useQuery({
+    queryKey: ['recommend', id],
+    queryFn: () => recommendApi.getRecommend(id)
   })
-  const imageRef = useRef(null)
+  console.log(recommendData)
 
+  const imageRef = useRef(null)
+  const handleBuyCount = (value) => {
+    setBuyCount(value)
+  }
+  // Add to cart
+
+  const addToCartMutation = useMutation(cartApi.addtoCart)
+  const addToCart = () => {
+    addToCartMutation.mutate(
+      { product_id: product?.id.toString(), buy_count: buyCount },
+      {
+        onSuccess: (data) => {
+          queryClient.invalidateQueries({ queryKey: ['cart'] })
+        },
+        onError: (error) => {}
+      }
+    )
+  }
+
+  //Xử lí zoom ảnh
   const handleZoom = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const image = imageRef.current
@@ -81,42 +107,20 @@ export default function ProductDetail() {
               </div>
               <div className='mt-8 flex items-center'>
                 <div className='capitalize text-gray-500'>Số lượng</div>
-                <div className='ml-10 flex items-center'>
-                  <button className='flex h-8 w-8 items-center justify-center rounded-l-sm border border-gray-300 text-gray-600'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      strokeWidth={1.5}
-                      stroke='currentColor'
-                      className='h-4 w-4'
-                    >
-                      <path strokeLinecap='round' strokeLinejoin='round' d='M19.5 12h-15' />
-                    </svg>
-                  </button>
-                  <InputNumber
-                    value={1}
-                    className=''
-                    classNameError='hidden'
-                    classNameInput='h-8 w-14 border-t border-b border-gray-300 p-1 text-center outline-none'
-                  />
-                  <button className='flex h-8 w-8 items-center justify-center rounded-r-sm border border-gray-300 text-gray-600'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      strokeWidth={1.5}
-                      stroke='currentColor'
-                      className='h-4 w-4'
-                    >
-                      <path strokeLinecap='round' strokeLinejoin='round' d='M12 4.5v15m7.5-7.5h-15' />
-                    </svg>
-                  </button>
-                </div>
-                <div className='ml-6 text-sm text-gray-500'>{product?.quantity} sản phẩm có sẵn</div>
+                <QuantityController
+                  onDecrease={handleBuyCount}
+                  onIncrease={handleBuyCount}
+                  onType={handleBuyCount}
+                  value={buyCount}
+                  max={product.quantity}
+                />
+                <div className='ml-6 text-sm text-gray-500'>{product.quantity} sản phẩm có sẵn</div>
               </div>
               <div className='mt-8 flex items-center'>
-                <button className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'>
+                <button
+                  className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'
+                  onClick={addToCart}
+                >
                   <svg
                     enableBackground='new 0 0 15 15'
                     viewBox='0 0 15 15'
@@ -153,10 +157,10 @@ export default function ProductDetail() {
 
       <div className='container'>
         <div className='mt-8'>
-          <div className=' text-lg uppercase text-gray-500'>Bạn có thể biết sản phẩm</div>
+          <div className=' text-lg uppercase text-gray-500'>Sản phẩm đề xuất dành cho bạn </div>
           <div className='mt-6 grid grid-cols-3 gap-2 md:grid-cols-5 lg:grid-cols-6'>
-            {productData &&
-              productData?.data.items.map((product) => (
+            {recommendData &&
+              recommendData?.data?.map((product) => (
                 <div className='col-span-1' key={product.id}>
                   <Product product={product} />
                 </div>

@@ -12,7 +12,7 @@ const PriceSchema = schema.pick(['minprice', 'maxprice'])
 
 export default function AsideFilter({ categories, queryConfig }) {
   const { cat } = queryConfig
-  const category = ['dientu', 'giadung', 'quanao']
+
   const {
     data,
     control,
@@ -68,8 +68,7 @@ export default function AsideFilter({ categories, queryConfig }) {
       <div className='my-4 h-[1px] bg-gray-300' />
       <ul>
         {categories?.map((categoryItem) => {
-          const Id = Number(categoryItem.id)
-          const isActive = cat === category[Id - 1]
+          const isActive = cat === categoryItem.id.toString()
           return (
             <li className=' py-2 pl-2 ' key={categoryItem.id}>
               <Link
@@ -77,7 +76,7 @@ export default function AsideFilter({ categories, queryConfig }) {
                   pathname: path.home,
                   search: createSearchParams({
                     ...queryConfig,
-                    cat: category[Id - 1]
+                    cat: categoryItem.id.toString()
                   }).toString()
                 }}
                 className={classNames('relative block px-2 font-medium ', {

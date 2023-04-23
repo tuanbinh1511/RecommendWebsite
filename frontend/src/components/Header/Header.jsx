@@ -5,25 +5,24 @@ import NoProduct from '../../assets/imgs/NoProduct.png'
 import path from '../../constants/path'
 import { useContext } from 'react'
 import { AppContext } from '../../context/app.context'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { logoutAccount } from '../../apis/auth.api'
 import { useQueryConfig } from '../../hook/useQueryConfig'
 import { omit } from 'lodash'
 import { useForm } from 'react-hook-form'
 import { schema } from '../../utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
+import cartApi from '../../apis/cart.api'
+import { formatCurrency } from '../../utils/utils'
 
 const keywordSchema = schema.pick(['keyword'])
 
+const MAX_Purchases = 5
+
 function Header() {
   const { isAuthenticated, setIsAuthenticated, profile, setProfile } = useContext(AppContext)
-  const logoutMutation = useMutation({
-    mutationFn: logoutAccount,
-    onSuccess: () => {
-      setIsAuthenticated(false)
-      setProfile(null)
-    }
-  })
+  const queryClient = useQueryClient()
+
   const queryConfig = useQueryConfig()
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -31,8 +30,19 @@ function Header() {
     },
     resolver: yupResolver(keywordSchema)
   })
-  console.log(queryConfig)
   const navigate = useNavigate()
+  const logoutMutation = useMutation({
+    mutationFn: logoutAccount,
+    onSuccess: () => {
+      setIsAuthenticated(false)
+      setProfile(null)
+      queryClient.removeQueries({ queryKey: ['cart'] })
+    }
+  })
+
+  const handleLogout = () => {
+    logoutMutation.mutate()
+  }
   const onSubmitSearch = handleSubmit((data) => {
     navigate({
       pathname: path.home,
@@ -44,10 +54,23 @@ function Header() {
       ).toString()
     })
   })
-  const handleLogout = () => {
-    logoutMutation.mutate()
+
+  const ArrReverse = (arr) => {
+    const newArray = []
+    for (let i = arr?.length - 1; i >= 0; i--) {
+      newArray.push(arr[i])
+    }
+    return newArray
   }
-  const purchasesIncart = 0
+  const { data: cartListData } = useQuery({
+    queryKey: ['cart'],
+    queryFn: () => {
+      return cartApi.getCartList()
+    },
+    onSuccess: () => {}
+  })
+  const purchasesIncart = ArrReverse(cartListData?.data.items)
+
   return (
     <div className=' bg-orange'>
       <div className='mb-2'>
@@ -183,34 +206,35 @@ function Header() {
             <Popover
               className='hover:animate-wiggle ml-6 flex cursor-pointer items-center pt-1 pb-2 text-white hover:text-gray-100'
               renderPopover={
-                <div className='max-w-[400px] rounded-sm border-gray-100 bg-white text-sm shadow-md'>
-                  {purchasesIncart > 0 ? (
-                    <div className='items-center p-2'>
+                <div className='max-h-[400px] max-w-[400px] rounded-sm border-gray-100 bg-white text-sm shadow-md'>
+                  {purchasesIncart && purchasesIncart.length > 0 ? (
+                    <div className='p-2'>
                       <div className='capitalize text-gray-400 opacity-70'>Sản phẩm mới thêm </div>
                       <div className='mt-5 '>
-                        <div className='flex items-center pt-4 hover:bg-gray-100'>
-                          <img
-                            src='https://down-vn.img.susercontent.com/file/756c3dcdb55872c7c9787516162c9447_tn'
-                            alt=''
-                            className='flex h-11 w-11 flex-shrink-0 items-center object-cover'
-                          />
-                          <div className='mx-3 flex-grow overflow-hidden'>
-                            <div className='truncate  text-base font-semibold'>Áo khoác nam</div>
+                        {purchasesIncart.slice(0, MAX_Purchases).map((purchase) => (
+                          <div className='flex pt-4  hover:bg-gray-100' key={purchase.product_id}>
+                            <img
+                              src={purchase.product_image}
+                              alt={purchase.product_name}
+                              className='flex h-11 w-11 flex-shrink-0 items-center object-cover'
+                            />
+                            <div className='mx-3 flex-grow overflow-hidden'>
+                              <div className='truncate  text-base font-semibold'>{purchase.product_name}</div>
+                            </div>
+                            <div className='ml-2 flex-shrink'>
+                              <span className='text-sm text-orange '>₫{formatCurrency(purchase.product_price)}</span>
+                            </div>
                           </div>
-                          <div className='ml-2 flex-shrink'>
-                            <span className='text-sm text-orange '>450000đ</span>
-                          </div>
-                        </div>
+                        ))}
                       </div>
 
                       <div className='my-5 flex justify-between '>
                         <div className='mt-2 items-center text-sm capitalize text-gray-600'>
-                          5
-                          {/* {purchasesIncart.length > MAX_Purchases ? purchasesIncart.length - MAX_Purchases : ''}
-                            {''}thêm hàng vào giỏ{' '} */}
+                          {purchasesIncart.length > MAX_Purchases ? purchasesIncart.length - MAX_Purchases : ''}
+                          {''}thêm hàng vào giỏ{' '}
                         </div>
                         <div className='bg-orange hover:bg-opacity-80'>
-                          <Link to='/cart' className='rounded-sm px-4 py-2 text-base text-white '>
+                          <Link to={path.cart} className='rounded-sm px-4 py-2 text-base text-white '>
                             {' '}
                             Xem giỏ hàng
                           </Link>
@@ -233,7 +257,7 @@ function Header() {
                   viewBox='0 0 24 24'
                   strokeWidth={1.5}
                   stroke='currentColor'
-                  className='h-8 w-8 text-orange'
+                  className='h-8 w-8 text-white'
                 >
                   <path
                     strokeLinecap='round'
@@ -241,11 +265,11 @@ function Header() {
                     d='M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z'
                   />
                 </svg>
-                {/* {purchasesIncart && purchasesIncart.length > 0 && (
-                    <span className='absolute top-[-5px] left-[17px] rounded-full bg-white px-[9px] py-[1px] text-xs text-orange '>
-                      {purchasesIncart?.length}
-                    </span>
-                  )} */}
+                {purchasesIncart && purchasesIncart.length > 0 && (
+                  <span className='absolute top-[-5px] left-[17px] rounded-full bg-white px-[9px] py-[1px] text-xs text-orange '>
+                    {purchasesIncart?.length}
+                  </span>
+                )}
               </Link>
             </Popover>
           </div>

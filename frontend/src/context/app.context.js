@@ -7,6 +7,7 @@ const initialAppContext = {
   profile: getProfileFromLS(),
   setProfile: () => null
 }
+
 export const AppContext = createContext(initialAppContext)
 
 export const AppProvider = ({ children }) => {

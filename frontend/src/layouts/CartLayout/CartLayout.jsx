@@ -1,5 +1,14 @@
+import Footer from '../../components/Footer'
+import Header from '../../components/Header/Header'
+
 function CartLayout({ children }) {
-  return <div>{children}</div>
+  return (
+    <div>
+      <Header />
+      {children}
+      <Footer />
+    </div>
+  )
 }
 
 export default CartLayout

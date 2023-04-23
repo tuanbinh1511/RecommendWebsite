@@ -10,13 +10,14 @@ class Http {
       baseURL: 'http://localhost:8000/',
       timeout: 10000,
       headers: {
-        'Content-Type': 'application/json'
+        // 'Content-Type': 'multipart/form-data ',
+        Authorization: `Bearer ${this.accessToken}`
       }
     })
     this.instance.interceptors.request.use(
       (config) => {
         if (this.accessToken && config.headers) {
-          config.headers.authorization = this.accessToken
+          // config.headers.Authorization = this.accessToken
           return config
         }
         return config
@@ -29,8 +30,8 @@ class Http {
       (response) => {
         const { url } = response.config
         if (url === path.login || url === path.register) {
-          this.accessToken = response?.data?.data?.access_token
-          setProfileFromLS(response?.data?.data?.user)
+          this.accessToken = response?.data?.access_token
+          setProfileFromLS(response?.data?.user)
           setAccessTokenToLS(this.accessToken)
         } else if (url === path.logout) {
           this.accessToken = ''

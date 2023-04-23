@@ -8,7 +8,6 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { schema } from '../../utils/rules'
 import { useMutation } from '@tanstack/react-query'
 import { registerAccount } from '../../apis/auth.api'
-import { omit } from 'lodash'
 import { isAxios422Error } from '../../utils/utils'
 import { useContext } from 'react'
 import { AppContext } from '../../context/app.context'
@@ -17,6 +16,7 @@ function Register() {
   const {
     register,
     handleSubmit,
+    getValues,
     setError,
     formState: { errors }
   } = useForm({
@@ -28,11 +28,14 @@ function Register() {
     mutationFn: (body) => registerAccount(body)
   })
   const onSubmit = handleSubmit((data) => {
-    const body = omit(data, ['confirm_password'])
-    registerAccountMutation.mutate(body, {
+    const formData = new FormData()
+    formData.append('username', getValues('username'))
+    formData.append('password', getValues('password'))
+    // const body = omit(data, ['confirm_password'])
+    registerAccountMutation.mutate(formData, {
       onSuccess: (data) => {
         setIsAuthenticated(true)
-        setProfile(data.data.data.user)
+        setProfile(data.data.user)
         navigate(path.home)
       },
       onError: (error) => {
