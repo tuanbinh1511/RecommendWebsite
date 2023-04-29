@@ -12,6 +12,9 @@ const cartApi = {
   },
   deleteCart({ item_id }) {
     return http.delete(`/cart/clear?item_id=${item_id}`)
+  },
+  buyProducts(ids) {
+    return http.patch('/cart/buy', [...ids])
   }
 }
 export default cartApi

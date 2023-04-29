@@ -37,3 +37,23 @@ export const getIdFromNameId = (nameId) => {
   const arr = nameId.split('-i-')
   return arr[arr.length - 1]
 }
+
+export const convertTime = (time) => {
+  const day = new Date(time).getDate()
+  const month = new Date(time).getMonth() + 1
+  const year = new Date(time).getFullYear()
+  const hour = new Date(time).getHours() + 7
+  const minute = new Date(time).getMinutes()
+  const second = new Date(time).getSeconds()
+  const timeConvert =
+    'Ngày ' + day + ' tháng ' + month + ' năm ' + year + ' -' + hour + ' giờ : ' + minute + ' phút ' + second + ' giây'
+  return timeConvert
+}
+
+export const ArrReverse = (arr) => {
+  const newArray = []
+  for (let i = arr?.length - 1; i >= 0; i--) {
+    newArray.push(arr[i])
+  }
+  return newArray
+}

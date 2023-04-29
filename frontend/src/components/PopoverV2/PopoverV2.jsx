@@ -55,9 +55,9 @@ function PopoverV2({ children, className, productId, as: Element = 'div', initia
             >
               {
                 <div className='max-h-[300px]  w-[1200px]  bg-white'>
-                  <div className=' grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8'>
+                  <div className=' grid grid-cols-3 md:grid-cols-6 lg:grid-cols-7'>
                     {recommendData &&
-                      recommendData?.data?.slice(0, 8).map((product) => (
+                      recommendData?.data?.slice(0, 7).map((product) => (
                         <div className='col-span-1' key={product.id}>
                           <Product product={product} />
                         </div>
