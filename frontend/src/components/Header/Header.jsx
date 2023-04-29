@@ -2,8 +2,10 @@ import Popover from '../Popover'
 import { Link, createSearchParams, useNavigate } from 'react-router-dom'
 import Logo from '../../assets/imgs/Logo.png'
 import NoProduct from '../../assets/imgs/NoProduct.png'
+import noAvartar from '../../assets/imgs/noAvartar.png'
+import LogoDtu from '../../assets/imgs/LogoDtu.png'
 import path from '../../constants/path'
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
 import { AppContext } from '../../context/app.context'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { logoutAccount } from '../../apis/auth.api'
@@ -13,7 +15,8 @@ import { useForm } from 'react-hook-form'
 import { schema } from '../../utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
 import cartApi from '../../apis/cart.api'
-import { formatCurrency } from '../../utils/utils'
+import { ArrReverse, formatCurrency } from '../../utils/utils'
+import userApi from '../../apis/user.api'
 
 const keywordSchema = schema.pick(['keyword'])
 
@@ -21,7 +24,18 @@ const MAX_Purchases = 5
 
 function Header() {
   const { isAuthenticated, setIsAuthenticated, profile, setProfile } = useContext(AppContext)
+
   const queryClient = useQueryClient()
+  const { data: profileData } = useQuery({
+    queryKey: ['profile', isAuthenticated],
+    queryFn: userApi.getProfile
+  })
+
+  const isLogin = isAuthenticated === true
+  useEffect(() => {
+    setProfile(profileData?.data[0])
+    // setProfileFromLS(profileData?.data[0])
+  }, [isLogin])
 
   const queryConfig = useQueryConfig()
   const { register, handleSubmit } = useForm({
@@ -55,18 +69,12 @@ function Header() {
     })
   })
 
-  const ArrReverse = (arr) => {
-    const newArray = []
-    for (let i = arr?.length - 1; i >= 0; i--) {
-      newArray.push(arr[i])
-    }
-    return newArray
-  }
   const { data: cartListData } = useQuery({
     queryKey: ['cart'],
     queryFn: () => {
       return cartApi.getCartList()
     },
+    enabled: isAuthenticated,
     onSuccess: () => {}
   })
   const purchasesIncart = ArrReverse(cartListData?.data.items)
@@ -119,18 +127,18 @@ function Header() {
                 <div className='rounded-sm border-gray-100 bg-white shadow-md'>
                   <Link
                     to={path.profile}
-                    className='block border-none bg-white py-3 px-4   text-left  text-black hover:text-cyan-500'
+                    className='block border-none bg-white py-3 px-4   text-left  text-black hover:text-orange'
                   >
                     Tài khoản của tôi
                   </Link>
                   <Link
                     to={path.cart}
-                    className='block border-none bg-white py-3 px-4  text-left text-black hover:text-cyan-500'
+                    className='block border-none bg-white py-3 px-4  text-left text-black hover:text-orange'
                   >
-                    Đơn mua{' '}
+                    Giỏ Hàng{' '}
                   </Link>
                   <button
-                    className='block border-none bg-white py-3 px-4   text-left text-black hover:text-cyan-500'
+                    className='block border-none bg-white py-3 px-4   text-left text-black hover:text-orange'
                     onClick={handleLogout}
                   >
                     Đăng xuất
@@ -139,13 +147,13 @@ function Header() {
               }
             >
               <div className='mr-2 h-6 w-6 flex-shrink-0 '>
-                <img
-                  src='https://scontent.fhan14-4.fna.fbcdn.net/v/t1.6435-1/99013175_1552654368248618_9221118823996850176_n.jpg?stp=dst-jpg_p320x320&_nc_cat=102&ccb=1-7&_nc_sid=7206a8&_nc_ohc=0xkxN2ODMsQAX88_YSP&_nc_ht=scontent.fhan14-4.fna&oh=00_AfB0mxLG5H8znvrd5I85hHVOoCC9yg2TRX9THTHVuKI5-w&oe=645F6E20'
-                  alt='avatar'
-                  className='h-full w-full rounded-full border-none object-cover'
-                />
+                {isAuthenticated ? (
+                  <img src={LogoDtu} alt='avatar' className='h-full w-full rounded-full border-none object-cover' />
+                ) : (
+                  <img src={noAvartar} alt='avatar' className='h-full w-full rounded-full border-none object-cover' />
+                )}
               </div>
-              <div className='mr-4 flex-shrink-0 text-black'>{profile?.email}</div>
+              <div className='mr-4 flex-shrink-0 font-medium text-white hover:text-gray-200'>{profile?.name}</div>
             </Popover>
           )}
           {!isAuthenticated && (

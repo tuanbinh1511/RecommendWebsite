@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { produce } from 'immer'
 import { keyBy } from 'lodash'
 import PopoverV2 from '../../components/PopoverV2/PopoverV2'
+import { toast } from 'react-toastify'
 
 export default function Cart() {
   const [extendedPurchases, setExtendedPurchases] = useState([])
@@ -34,7 +35,16 @@ export default function Cart() {
       console.log({ error })
     }
   })
-
+  const buyProductMutation = useMutation({
+    mutationFn: cartApi.buyProducts,
+    onSuccess: (data) => {
+      refetch()
+      toast.success('Bạn đã mua hàng thành công!', {
+        position: 'top-right',
+        autoClose: 2000
+      })
+    }
+  })
   const purchasesInCart = cartListData?.data.items
   const isAllChecked = extendedPurchases.every((purchase) => purchase.checked)
   const checkedPurchases = extendedPurchases.filter((purchase) => purchase.checked)
@@ -78,7 +88,6 @@ export default function Cart() {
   }
   const handleDelete = async (purchaseIndex) => {
     const item_id = extendedPurchases[purchaseIndex]?.product_id
-    console.log(item_id)
     await deleteCartMutaion.mutateAsync({ item_id })
   }
   const handleDeleteManyPurchase = () => {
@@ -101,7 +110,12 @@ export default function Cart() {
       }))
     )
   }
-
+  const handleBuy = () => {
+    if (checkedPurchaseLength > 0) {
+      const ids = checkedPurchases.map((purchase) => purchase.product_id)
+      buyProductMutation.mutate(ids)
+    }
+  }
   return (
     <div className='bg-neutral-100 py-16'>
       <div className='container'>
@@ -147,9 +161,9 @@ export default function Cart() {
                         />
                       </div>
                       <div className='flex-grow'>
-                        <div className='flex items-center'>
+                        <div className='flex items-center overflow-hidden'>
                           <Link
-                            className='h-20 w-20 flex-shrink-0'
+                            className='h-20 w-20 flex-shrink-0 items-center object-cover'
                             to={`${path.home}$
                               id: purchase.product.id
                             })}`}
@@ -250,7 +264,10 @@ export default function Cart() {
                 <div className='ml-6 text-orange'>₫{formatCurrency(totalPurchaseDiscountChecked)}</div>
               </div>
             </div>
-            <Button className='mt-5 flex h-10 w-52 items-center justify-center bg-orange text-sm uppercase text-white hover:bg-red-600 sm:ml-4 sm:mt-0'>
+            <Button
+              className='mt-5 flex h-10 w-52 items-center justify-center bg-orange text-sm uppercase text-white hover:bg-red-600 sm:ml-4 sm:mt-0'
+              onClick={handleBuy}
+            >
               Mua hàng
             </Button>
           </div>

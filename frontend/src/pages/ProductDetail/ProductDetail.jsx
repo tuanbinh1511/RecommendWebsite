@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import productApi from '../../apis/products.api'
 import { formatCurrency, formatNumberToSocial, rateSale } from '../../utils/utils'
 import Product from '../ProductList/Product'
@@ -7,12 +7,14 @@ import { useRef, useState } from 'react'
 import QuantityController from '../../components/QuantityController/QuantityController'
 import cartApi from '../../apis/cart.api'
 import recommendApi from '../../apis/recommend.api'
+import { toast } from 'react-toastify'
+import path from '../../constants/path'
 
 export default function ProductDetail() {
   const queryClient = useQueryClient()
 
   const { id } = useParams()
-  console.log(id)
+  const navigate = useNavigate()
   const [buyCount, setBuyCount] = useState(1)
   const { data: productDetailData } = useQuery({
     queryKey: ['product', id],
@@ -23,7 +25,15 @@ export default function ProductDetail() {
     queryKey: ['recommend', id],
     queryFn: () => recommendApi.getRecommend(id)
   })
-  console.log(recommendData)
+  const buyProductMutation = useMutation({
+    mutationFn: cartApi.buyProducts,
+    onSuccess: (data) => {
+      toast.success('Bạn đã mua hàng thành công!', {
+        position: 'top-right',
+        autoClose: 2000
+      })
+    }
+  })
 
   const imageRef = useRef(null)
   const handleBuyCount = (value) => {
@@ -43,7 +53,15 @@ export default function ProductDetail() {
       }
     )
   }
-
+  const handleBuy = async () => {
+    const res = await addToCartMutation.mutateAsync({ product_id: product?.id.toString(), buy_count: buyCount })
+    const purchase = res?.data
+    navigate(path.cart, {
+      state: {
+        purchaseId: purchase.product_id
+      }
+    })
+  }
   //Xử lí zoom ảnh
   const handleZoom = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -146,7 +164,10 @@ export default function ProductDetail() {
                   </svg>
                   Thêm vào giỏ hàng
                 </button>
-                <button className='fkex ml-4 h-12 min-w-[5rem] items-center justify-center rounded-sm bg-orange px-5 capitalize text-white shadow-sm outline-none hover:bg-orange/90'>
+                <button
+                  className='fkex ml-4 h-12 min-w-[5rem] items-center justify-center rounded-sm bg-orange px-5 capitalize text-white shadow-sm outline-none hover:bg-orange/90'
+                  onClick={handleBuy}
+                >
                   Mua ngay
                 </button>
               </div>
