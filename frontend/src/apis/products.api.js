@@ -1,6 +1,7 @@
 import http from '../utils/http'
 
-const url = 'products'
+const Url = 'products'
+const url = 'products_user'
 const URL = 'product'
 const productApi = {
   getProducts(params) {
@@ -8,6 +9,9 @@ const productApi = {
   },
   getProductDetail(id) {
     return http.get(`${URL}?id=${id}`)
+  },
+  getProductsNoLogin(params) {
+    return http.get(Url, { params })
   }
 }
 export default productApi

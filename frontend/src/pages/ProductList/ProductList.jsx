@@ -6,13 +6,27 @@ import { useQuery } from '@tanstack/react-query'
 import Pagination from '../../components/Pagination'
 import categoryApi from '../../apis/category.api'
 import { useQueryConfig } from '../../hook/useQueryConfig'
+import { useContext } from 'react'
+import { AppContext } from '../../context/app.context'
 
 function ProductList() {
+  const { isAuthenticated } = useContext(AppContext)
+  console.log(isAuthenticated)
+  const isLogin = isAuthenticated === false
   const queryConfig = useQueryConfig()
-  const { data } = useQuery({
+
+  const { data: ProductsNoLogin } = useQuery({
+    queryKey: ['productsNologin', queryConfig, isAuthenticated],
+    queryFn: async () => {
+      return await productApi.getProductsNoLogin(queryConfig)
+    },
+    enabled: isLogin,
+    keepPreviousData: true
+  })
+  const { data: ProductsUSerData } = useQuery({
     queryKey: ['products', queryConfig],
-    queryFn: () => {
-      return productApi.getProducts(queryConfig)
+    queryFn: async () => {
+      return await productApi.getProducts(queryConfig)
     },
     keepPreviousData: true
   })
@@ -33,12 +47,23 @@ function ProductList() {
           <div className='col-span-9'>
             <SoftProductList queryConfig={queryConfig} pageSize={15} />
             <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4'>
-              {data &&
+              {ProductsUSerData && isAuthenticated
+                ? ProductsUSerData?.data?.items?.map((product, index) => (
+                    <div className='col-span-1' key={product.id}>
+                      <Product product={product} />
+                    </div>
+                  ))
+                : ProductsNoLogin?.data?.items?.map((product, index) => (
+                    <div className='col-span-1' key={product.id}>
+                      <Product product={product} />
+                    </div>
+                  ))}
+              {/* {data &&
                 data?.data?.items?.map((product, index) => (
                   <div className='col-span-1' key={product.id}>
                     <Product product={product} />
                   </div>
-                ))}
+                ))} */}
             </div>
             <Pagination queryConfig={queryConfig} pageSize={15}></Pagination>
           </div>

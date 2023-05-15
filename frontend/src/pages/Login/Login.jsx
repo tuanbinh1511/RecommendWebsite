@@ -25,7 +25,10 @@ function Login() {
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
   const navigate = useNavigate()
   const loginAccountMutation = useMutation({
-    mutationFn: (body) => loginAccount(body)
+    mutationFn: async (body) => await loginAccount(body),
+    onSuccess: () => {
+      setIsAuthenticated(true)
+    }
   })
   const onSubmit = handleSubmit((data) => {
     const formData = new FormData()
@@ -34,8 +37,8 @@ function Login() {
 
     // const body = omit(formData)
     loginAccountMutation.mutate(formData, {
-      onSuccess: (data) => {
-        setIsAuthenticated(true)
+      onSuccess: async (data) => {
+        await setIsAuthenticated(true)
         setProfile(data.data.user)
         navigate(path.home)
       },

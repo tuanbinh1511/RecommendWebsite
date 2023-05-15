@@ -28,7 +28,10 @@ function Header() {
   const queryClient = useQueryClient()
   const { data: profileData } = useQuery({
     queryKey: ['profile', isAuthenticated],
-    queryFn: userApi.getProfile
+    queryFn: userApi.getProfile,
+    onSuccess: () => {
+      setProfile(profileData?.data[0])
+    }
   })
 
   const isLogin = isAuthenticated === true
@@ -258,7 +261,7 @@ function Header() {
                 </div>
               }
             >
-              <Link to={path.home} className='relative'>
+              <Link to={path.cart} className='relative'>
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   fill='none'
