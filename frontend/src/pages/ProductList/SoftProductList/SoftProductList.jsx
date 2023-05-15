@@ -49,7 +49,7 @@ function SoftProductList({ queryConfig, pageSize }) {
             })}
             onClick={() => handleSort('')}
           >
-            Mới nhất
+            Đề xuất
           </button>
           <button
             className={classNames('h-10 rounded-md   px-4 text-center font-semibold capitalize hover:opacity-80 ', {
